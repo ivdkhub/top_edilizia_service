@@ -44,3 +44,6 @@ next-env.d.ts
 
 # video sorgente non usati dal sito (gli originali restano fuori da git)
 /public/media/[1-9].mp4
+
+# python
+__pycache__/

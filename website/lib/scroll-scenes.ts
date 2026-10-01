@@ -5,6 +5,25 @@ const FRAME = 1 / FPS;
 const OVERLAP = 0.09;
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
 const ease = (value: number) => value * value * (3 - 2 * value);
+// After this wait a scene may appear on its poster instead of holding the
+// previous scene frozen while a slow connection is still loading it.
+const POSTER_FALLBACK_MS = 700;
+
+type Variant = "hd" | "sd" | "portrait";
+type NetworkInformation = { saveData?: boolean; effectiveType?: string };
+
+/** Smallest encode that still looks sharp for this viewport and connection. */
+export function pickVariant(): Variant {
+  const width = window.innerWidth,
+    height = window.innerHeight;
+  // Matches the 0.6 crop made by tools/optimize_web_media.py.
+  if (width / height <= 0.6) return "portrait";
+  const connection = (navigator as { connection?: NetworkInformation })
+    .connection;
+  const slow =
+    connection?.saveData || /(^|-)2g|3g/.test(connection?.effectiveType ?? "");
+  return slow || width <= 1024 ? "sd" : "hd";
+}
 
 /** Two-scene compositing, bounded prefetch and one outstanding seek per video. */
 export function createScrollScenes(
@@ -17,6 +36,7 @@ export function createScrollScenes(
   let lastInput = performance.now();
   let lastTick = lastInput;
   let lastBlur = "";
+  let variant = pickVariant();
   const weights: number[] = layers.map((_, index) => (index === 0 ? 1 : 0));
   const clips = layers.map((layer, index) => ({
     video: layer.querySelector("video")!,
@@ -24,6 +44,7 @@ export function createScrollScenes(
     callback: 0,
     lastSeek: -Infinity,
     lastUsed: lastInput,
+    waitingSince: 0,
     opacity: index === 0 ? "1" : "0",
   }));
   const schedule = () => {
@@ -55,7 +76,8 @@ export function createScrollScenes(
     if (!clip.video.getAttribute("src")) {
       clip.frameTime = -1;
       watchFrame(index);
-      clip.video.src = `/media/scroll/${index + 1}.mp4`;
+      clip.video.poster = `/media/posters/${variant === "portrait" ? "portrait" : "hd"}/${index + 1}.webp`;
+      clip.video.src = `/media/scroll/${variant}/${index + 1}.mp4`;
       clip.video.load();
     }
   };
@@ -89,6 +111,17 @@ export function createScrollScenes(
     clip.video.removeAttribute("src");
     clip.video.load();
     clip.frameTime = -1;
+    clip.waitingSince = 0;
+  };
+  // Rotating a phone switches between the portrait crop and full frames.
+  const resize = () => {
+    const next = pickVariant();
+    if (next === variant) return;
+    variant = next;
+    clips.forEach((clip, index) => {
+      if (clip.video.getAttribute("src")) release(index);
+    });
+    schedule();
   };
   const tick = () => {
     const now = performance.now();
@@ -97,11 +130,18 @@ export function createScrollScenes(
     if (!dirty || disposed || document.hidden) return;
     dirty = false;
     const current = Math.min(clips.length - 1, Math.floor(position));
-    for (let index = current - 1; index <= current + 1; index++) {
+    prepare(current, now);
+    seek(current, now);
+    // Neighbours wait for the visible scene so they never compete with it
+    // for bandwidth on a slow connection.
+    const currentReady = clips[current].video.readyState >= 2;
+    for (const index of [current + 1, current - 1]) {
       if (!clips[index]) continue;
-      prepare(index, now);
+      if (currentReady || clips[index].video.getAttribute("src"))
+        prepare(index, now);
       seek(index, now);
     }
+    if (!currentReady) dirty = true;
 
     const desired = clips.map(() => 0);
     const boundary = Math.round(position);
@@ -115,13 +155,25 @@ export function createScrollScenes(
       desired[boundary] = mix;
     } else desired[current] = 1;
 
-    // Never fade in a poster or an old frame from a previous visit to a clip.
+    // Never fade in an old frame from a previous visit to a clip; a poster is
+    // shown only while a slow connection is still loading the clip.
     clips.forEach((clip, index) => {
       const alreadyVisible = weights[index] > 0.002;
       const frameReady =
         clip.frameTime >= 0 &&
         Math.abs(clip.frameTime - targetTime(index)) <= FRAME * 4;
-      if (!alreadyVisible && !frameReady) desired[index] = 0;
+      if (alreadyVisible || frameReady || !desired[index]) {
+        clip.waitingSince = 0;
+        return;
+      }
+      clip.waitingSince ||= now;
+      if (
+        clip.video.readyState >= 2 ||
+        now - clip.waitingSince < POSTER_FALLBACK_MS
+      ) {
+        desired[index] = 0;
+        dirty = true;
+      }
     });
     const total = desired.reduce((sum, weight) => sum + weight, 0);
     const blend = 1 - Math.exp(-dt / 0.075);
@@ -172,9 +224,9 @@ export function createScrollScenes(
     });
   };
   document.addEventListener("visibilitychange", schedule);
+  window.addEventListener("resize", resize);
   gsap.ticker.add(tick);
   prepare(0, lastInput);
-  prepare(1, lastInput);
 
   return {
     isSceneReady(index: number) {
@@ -200,6 +252,7 @@ export function createScrollScenes(
       disposed = true;
       gsap.ticker.remove(tick);
       document.removeEventListener("visibilitychange", schedule);
+      window.removeEventListener("resize", resize);
       clips.forEach((clip, index) => {
         clip.video.removeEventListener("loadeddata", loaded[index]);
         clip.video.removeEventListener("seeked", loaded[index]);

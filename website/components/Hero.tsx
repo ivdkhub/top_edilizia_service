@@ -63,7 +63,7 @@ export default function Hero() {
         gsap.set(layers, { opacity: 0 });
         gsap.set(layers[SCENE_COUNT - 1], { opacity: 1 });
         layers[SCENE_COUNT - 1].querySelector("video")!.poster =
-          "/media/10-final.jpg";
+          "/media/posters/10-final.webp";
         gsap.set(texts, { autoAlpha: 0 });
         setTvActive(true);
       } else {
@@ -152,13 +152,23 @@ export default function Hero() {
               key={i}
               style={{ opacity: i === 0 ? 1 : 0 }}
             >
-              <video
-                muted
-                playsInline
-                preload="auto"
-                poster={`/media/${i + 1}-poster.jpg`}
-                aria-hidden="true"
-              />
+              {i === 0 && (
+                // First paint: a light still under the not-yet-loaded video.
+                // Other scenes receive their posters only when they load.
+                <picture>
+                  <source
+                    media="(max-aspect-ratio: 3/5)"
+                    srcSet="/media/posters/portrait/1.webp"
+                  />
+                  <img
+                    className="hero-still"
+                    src="/media/posters/hd/1.webp"
+                    alt=""
+                    fetchPriority="high"
+                  />
+                </picture>
+              )}
+              <video muted playsInline preload="auto" aria-hidden="true" />
             </div>
           ))}
         </div>

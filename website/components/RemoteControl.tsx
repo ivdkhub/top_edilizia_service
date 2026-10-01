@@ -127,10 +127,11 @@ export default function RemoteControl({
       <ParallaxCard as="span" className="tv-remote-parallax" entrance={false}>
         <span className="tv-remote-image">
           <img
-            src="/media/telecomando-top.png"
+            decoding="async"
+            src="/media/telecomando-top.webp"
             alt=""
-            width={1024}
-            height={1536}
+            width={640}
+            height={960}
             draggable={false}
           />
         </span>

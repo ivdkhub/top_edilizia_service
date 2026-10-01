@@ -2,47 +2,55 @@
   font-family: "Cormorant Garamond";
   font-style: italic;
   font-weight: 400;
-  src: url(/fonts/font-0.ttf) format("truetype");
+  src: url(/fonts/font-0.woff2) format("woff2");
+  font-display: swap;
 }
 @font-face {
   font-family: "Cormorant Garamond";
   font-style: normal;
   font-weight: 400;
-  src: url(/fonts/font-1.ttf) format("truetype");
+  src: url(/fonts/font-1.woff2) format("woff2");
+  font-display: swap;
 }
 @font-face {
   font-family: "Cormorant Garamond";
   font-style: normal;
   font-weight: 500;
-  src: url(/fonts/font-2.ttf) format("truetype");
+  src: url(/fonts/font-2.woff2) format("woff2");
+  font-display: swap;
 }
 @font-face {
   font-family: "Cormorant Garamond";
   font-style: normal;
   font-weight: 600;
-  src: url(/fonts/font-3.ttf) format("truetype");
+  src: url(/fonts/font-3.woff2) format("woff2");
+  font-display: swap;
 }
 @font-face {
   font-family: "Inter";
   font-style: normal;
   font-weight: 400;
-  src: url(/fonts/font-4.ttf) format("truetype");
+  src: url(/fonts/font-4.woff2) format("woff2");
+  font-display: swap;
 }
 @font-face {
   font-family: "Inter";
   font-style: normal;
   font-weight: 500;
-  src: url(/fonts/font-5.ttf) format("truetype");
+  src: url(/fonts/font-5.woff2) format("woff2");
+  font-display: swap;
 }
 @font-face {
   font-family: "Inter";
   font-style: normal;
   font-weight: 600;
-  src: url(/fonts/font-6.ttf) format("truetype");
+  src: url(/fonts/font-6.woff2) format("woff2");
+  font-display: swap;
 }
 @font-face {
   font-family: "Inter";
   font-style: normal;
   font-weight: 700;
-  src: url(/fonts/font-7.ttf) format("truetype");
+  src: url(/fonts/font-7.woff2) format("woff2");
+  font-display: swap;
 }

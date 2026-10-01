@@ -24,13 +24,17 @@ export default function Transformation() {
         style={{ "--split": `${position}%` } as React.CSSProperties}
       >
         <img
+          loading="lazy"
+          decoding="async"
           className="comparison-after"
           src="/media/completed.jpg"
           alt="Realizzazione finale della villa, dal video fornito"
         />
         <div className="comparison-before">
           <img
-            src="/media/fondamenta.png"
+            loading="lazy"
+            decoding="async"
+            src="/media/fondamenta.webp"
             alt="Fondamenta prima della costruzione, immagine fornita"
           />
         </div>

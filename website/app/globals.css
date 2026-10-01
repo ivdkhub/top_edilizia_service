@@ -195,6 +195,7 @@ p {
 }
 .hero-film,
 .hero-film video,
+.hero-still,
 .hero-shade {
   position: absolute;
   inset: 0;
@@ -207,7 +208,8 @@ p {
   pointer-events: none;
   transform: translateZ(0);
 }
-.hero-film video {
+.hero-film video,
+.hero-still {
   object-fit: cover;
 }
 .hero-shade {
@@ -227,6 +229,14 @@ p {
   color: #fff;
   width: 44%;
   will-change: transform, opacity;
+  /* Captions are read, not touched: swipes and long presses reach the page. */
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.hero-caption .button {
+  pointer-events: auto;
 }
 .hero-caption .eyebrow {
   color: white;
@@ -1623,7 +1633,8 @@ details > p {
   .caption-2 h1 {
     font-size: 55px;
   }
-  .hero-film video {
+  .hero-film video,
+  .hero-still {
     object-position: 54% center;
   }
   .section {
@@ -2647,4 +2658,67 @@ legend {
   margin: 20px 0 8px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+}
+
+/* Phones: captions sit under the header so the lower half of the screen stays
+   free for the thumb that scrolls the animation. */
+@media (max-width: 800px) {
+  .hero-caption,
+  .caption-2 {
+    top: calc(70px + 3svh);
+    bottom: auto;
+    left: 6vw;
+    right: 6vw;
+    width: auto;
+    max-width: 520px;
+    text-align: left;
+  }
+  .hero-caption .eyebrow {
+    margin-bottom: 12px;
+  }
+  .hero-caption h1,
+  .caption-2 h1 {
+    font-size: clamp(34px, 9.5vw, 48px);
+    margin-bottom: 12px;
+  }
+  .hero-description {
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 34ch;
+  }
+  .caption-2 .button {
+    margin-top: 4px;
+  }
+  .hero-shade {
+    background: linear-gradient(
+      180deg,
+      #070f2199 0%,
+      #070f2155 34%,
+      transparent 56%,
+      transparent 82%,
+      #06101440 100%
+    );
+  }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  /* Landscape phones: compact captions at the top, nothing at the bottom. */
+  .hero-caption,
+  .caption-2 {
+    top: 96px;
+    bottom: auto;
+    left: 4vw;
+    right: auto;
+    width: 55%;
+    text-align: left;
+  }
+  .hero-caption .eyebrow {
+    margin-bottom: 8px;
+  }
+  .hero-caption h1,
+  .caption-2 h1 {
+    font-size: 30px;
+  }
+  .hero-description {
+    display: none;
+  }
 }

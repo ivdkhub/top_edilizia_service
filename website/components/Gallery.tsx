@@ -94,6 +94,8 @@ export default function Gallery() {
             <>
               <div className="estate-dialog-video">
                 <img
+                  loading="lazy"
+                  decoding="async"
                   className="company-image detail-image"
                   src={gallery[selected].image}
                   width={gallery[selected].width}
