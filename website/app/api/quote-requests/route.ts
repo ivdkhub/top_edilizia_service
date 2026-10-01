@@ -3,6 +3,7 @@ import { requestSchema } from "../../../lib/quote-config";
 import {
   ApiError,
   assertAdmin,
+  clientIp,
   json,
   readWritePayload,
   requestReference,
@@ -82,7 +83,7 @@ export async function POST(request: Request) {
       return json({ reference: requestReference(data.id) });
     }
     const hour = Math.floor(Date.now() / 3600000);
-    const ip = request.headers.get("cf-connecting-ip") || "local";
+    const ip = await clientIp();
     const digest = await crypto.subtle.digest(
       "SHA-256",
       new TextEncoder().encode(`${hour}:${ip}`),

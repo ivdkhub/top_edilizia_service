@@ -1,12 +1,17 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { createClient } from "@libsql/client";
 import {
   initialRequest,
   requestSchema,
   quoteSchema,
   quoteTotals,
 } from "../lib/quote-config.ts";
-const base = "http://127.0.0.1:5173";
+try {
+  process.loadEnvFile(".env.local");
+} catch {}
+const base = process.env.TEST_BASE_URL || "http://localhost:3000";
+const password = process.env.ADMIN_PASSWORD;
+assert.ok(password, "Imposta ADMIN_PASSWORD per eseguire il test.");
 const id = crypto.randomUUID();
 const request = {
   ...initialRequest(),
@@ -111,10 +116,7 @@ try {
   assert.equal(
     (
       await fetch(`${base}/api/quote-requests`, {
-        headers: {
-          "oai-authenticated-user-id": "local_seedy",
-          "oai-authenticated-user-email": "spoof@example.invalid",
-        },
+        headers: { Cookie: "tes_admin=9999999999.forged" },
       })
     ).status,
     401,
@@ -157,9 +159,18 @@ try {
     ).status,
     200,
   );
-  const login = await fetch(`${base}/signin-with-chatgpt?return_to=/admin`, {
-    redirect: "manual",
-  });
+  const loginForm = (value) =>
+    fetch(`${base}/api/admin/login`, {
+      method: "POST",
+      redirect: "manual",
+      headers: { Origin: base },
+      body: new URLSearchParams({ password: value, return_to: "/admin" }),
+    });
+  const rejected = await loginForm("password-errata");
+  assert.match(rejected.headers.get("location") || "", /error=invalid/);
+  assert.equal(rejected.headers.get("set-cookie"), null);
+  const login = await loginForm(password);
+  assert.equal(login.status, 303);
   const cookie = login.headers.get("set-cookie")?.split(";")[0];
   assert.ok(cookie);
   const adminHeaders = { ...headers, Cookie: cookie };
@@ -214,31 +225,14 @@ try {
 } finally {
   if (created) {
     assert.match(id, /^[a-f0-9-]{36}$/);
-    const cleanup = spawnSync(
-      process.execPath,
-      [
-        "node_modules/wrangler/bin/wrangler.js",
-        "d1",
-        "execute",
-        "site-creator-d1",
-        "--local",
-        "--config",
-        ".sites-runtime/d1-local.json",
-        "--persist-to",
-        ".wrangler/state",
-        "--command",
-        `DELETE FROM quote_requests WHERE id = '${id}' AND json_extract(payload, '$.email') = 'api-test@example.invalid'`,
-      ],
-      {
-        encoding: "utf8",
-        env: { ...process.env, WRANGLER_SEND_METRICS: "false" },
-      },
-    );
-    assert.equal(
-      cleanup.status,
-      0,
-      "Pulizia della sola richiesta sintetica di test non riuscita.",
-    );
+    const db = createClient({
+      url: process.env.TURSO_DATABASE_URL || "file:.data/local.db",
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    });
+    await db.execute({
+      sql: "DELETE FROM quote_requests WHERE id = ? AND json_extract(payload, '$.email') = 'api-test@example.invalid'",
+      args: [id],
+    });
     console.log("Richiesta sintetica del test API rimossa.");
   }
 }

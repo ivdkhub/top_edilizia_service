@@ -1,4 +1,5 @@
-*.mp4
+# Video sorgente originali (le versioni ottimizzate sono in website/public/media)
+/*.mp4
 backups/
 .company-import/
 .reference-analysis/

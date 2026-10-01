@@ -1,24 +1,17 @@
-import { env } from "cloudflare:workers";
 import { headers } from "next/headers";
-import { getChatGPTUser } from "../app/chatgpt-auth";
+import { isAdminSession } from "./admin-auth";
 import type { QuoteRequest, Quote, SavedRequest } from "./quote-config";
 export async function adminIdentity() {
-  const user = await getChatGPTUser();
-  if (!user) return { authenticated: false, allowed: false };
-  const allowlist = (env.ADMIN_USER_IDS || "")
-    .split(",")
-    .map((v) => v.trim())
-    .filter(Boolean);
-  const host = (await headers()).get("host") || "";
-  // The starter's loopback-only development sign-in is never a production role.
-  const local =
-    process.env.NODE_ENV === "development" &&
-    /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host) &&
-    user.userId === "local_seedy";
-  return {
-    authenticated: true,
-    allowed: local || allowlist.includes(user.userId),
-  };
+  const allowed = await isAdminSession();
+  return { authenticated: allowed, allowed };
+}
+export async function clientIp() {
+  const h = await headers();
+  return (
+    h.get("x-real-ip") ||
+    h.get("x-forwarded-for")?.split(",")[0].trim() ||
+    "local"
+  );
 }
 export class ApiError extends Error {
   constructor(

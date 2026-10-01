@@ -83,7 +83,14 @@ export default function AdminDashboard() {
           </a>
           <p>Area riservata</p>
         </div>
-        <a href="/">Torna al sito</a>
+        <div>
+          <a href="/">Torna al sito</a>
+          <form method="post" action="/api/admin/logout">
+            <button type="submit" className="admin-logout">
+              Esci
+            </button>
+          </form>
+        </div>
       </header>
       <div className="admin-title">
         <div>

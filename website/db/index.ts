@@ -1,17 +1,55 @@
-import { env } from "cloudflare:workers";
-import { drizzle } from "drizzle-orm/d1";
-import * as schema from "./schema";
-export function getQuoteDatabase(): D1Database {
-  if (!env.DB) throw new Error("Quote database binding is unavailable.");
-  return env.DB;
+import { createClient, type Client, type InValue } from "@libsql/client";
+
+// Turso/libSQL client exposed through the small D1-style surface the quote
+// routes use (prepare → bind → all/first/run), so their SQL stays unchanged.
+let client: Client | undefined;
+
+function getClient(): Client {
+  if (client) return client;
+  const url =
+    process.env.TURSO_DATABASE_URL ||
+    (process.env.NODE_ENV === "production" ? "" : "file:.data/local.db");
+  if (!url) throw new Error("TURSO_DATABASE_URL is not configured.");
+  client = createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
+  return client;
 }
 
-export function getDb() {
-  if (!env.DB) {
-    throw new Error(
-      "Cloudflare D1 binding `DB` is unavailable. Set the `d1` field in .openai/hosting.json to `DB` or let your control plane inject the real binding values before using the database.",
-    );
+class Statement {
+  constructor(
+    private sql: string,
+    private args: InValue[] = [],
+  ) {}
+
+  bind(...args: InValue[]) {
+    return new Statement(this.sql, args);
   }
 
-  return drizzle(env.DB, { schema });
+  private async execute() {
+    return getClient().execute({ sql: this.sql, args: this.args });
+  }
+
+  async all<T = Record<string, unknown>>() {
+    const result = await this.execute();
+    return {
+      results: result.rows.map(
+        (row) =>
+          Object.fromEntries(
+            result.columns.map((column, index) => [column, row[index]]),
+          ) as T,
+      ),
+    };
+  }
+
+  async first<T = Record<string, unknown>>(): Promise<T | null> {
+    return (await this.all<T>()).results[0] ?? null;
+  }
+
+  async run() {
+    const result = await this.execute();
+    return { meta: { changes: result.rowsAffected } };
+  }
+}
+
+export function getQuoteDatabase() {
+  return { prepare: (sql: string) => new Statement(sql) };
 }
