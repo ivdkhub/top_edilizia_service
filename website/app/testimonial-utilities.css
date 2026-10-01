@@ -1,0 +1,15 @@
+@import "tailwindcss/theme.css" layer(theme);
+@source "../components/Stories.tsx";
+@source "../components/ui/animated-cards-stack.tsx";
+@source "../components/ui/avatar.tsx";
+@theme inline {
+  --color-background: hsl(var(--stack-background));
+  --color-accent: hsl(var(--stack-accent));
+  --color-accent-foreground: hsl(var(--stack-accent-foreground));
+  --color-muted: hsl(var(--stack-muted));
+  --color-muted-foreground: hsl(var(--stack-muted-foreground));
+}
+/* Keep the supplied utilities local to the testimonial section. */
+.stories {
+  @tailwind utilities source(none);
+}

@@ -1,0 +1,12 @@
+
+  vinext dev  (Vite 8.0.13)
+
+Sites local sign-in: seedy@sites.test
+  ➜  Local:   http://127.0.0.1:5173/
+ GET / 200 in 2.3s (compile: 1790847112.0s, render: 2.3s)
+ GET / 200 in 80ms (compile: 1790847112.0s, render: 51ms)
+ GET / 200 in 125ms (compile: 1790847112.0s, render: 90ms)
+ GET / 200 in 124ms (compile: 1790847112.0s, render: 77ms)
+ GET /7 404 in 48ms
+ GET / 200 in 90ms (compile: 1790847112.0s, render: 59ms)
+ GET / 200 in 87ms (compile: 1790847112.0s, render: 56ms)

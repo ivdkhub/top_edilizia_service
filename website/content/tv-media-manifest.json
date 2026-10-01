@@ -1,0 +1,41 @@
+{
+  "source": "11.mp4",
+  "sourceSha256": "086611173b18c243bea5ed909f4f487a305bdb2ba245b08202f6cfea970e16d6",
+  "metadata": {
+    "width": 1924,
+    "height": 1076,
+    "fps": 24.0,
+    "frames": 73,
+    "duration": 3.0416666666666665,
+    "keyframes": [
+      0.0
+    ]
+  },
+  "forwardPath": "/media/11.mp4",
+  "forwardExactSourceCopy": true,
+  "reversePath": "/media/tv/11-reverse.mp4",
+  "reverseSha256": "301b2c12a99231fd05df7b8c961231574a8abd86419971991ee9ed7d08744538",
+  "reverseMetadata": {
+    "width": 1924,
+    "height": 1076,
+    "fps": 24.0,
+    "frames": 73,
+    "duration": 3.0416666666666665,
+    "keyframes": [
+      0.0,
+      0.25,
+      0.5,
+      0.75,
+      1.0,
+      1.25,
+      1.5,
+      1.75,
+      2.0,
+      2.25,
+      2.5,
+      2.75,
+      3.0
+    ]
+  },
+  "sourceMediaUnchanged": true
+}
