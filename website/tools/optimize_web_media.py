@@ -118,11 +118,6 @@ def posters():
         image.crop((cx, 0, cx + cw, ch)).resize((540, 900), Image.LANCZOS).save(
             out / "portrait" / f"{number}.webp", "WEBP", quality=72, method=6
         )
-    # Last frame of scene 10, shown when the visitor prefers reduced motion.
-    with av.open(str(SOURCES / "10.mp4")) as container:
-        *_, last = container.decode(video=0)
-    final = fit(last.to_image(), 1280)
-    final.save(MEDIA / "posters" / "10-final.webp", "WEBP", quality=74, method=6)
 
 
 def fit(image, longest):

@@ -2722,3 +2722,103 @@ legend {
     display: none;
   }
 }
+
+/* Opening loader: covers the page until the scroll film is downloaded. */
+html:has(.site-loader:not(.is-leaving)),
+html:has(.site-loader:not(.is-leaving)) body {
+  overflow: hidden;
+}
+.site-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  background: #0b1418;
+  color: #fff;
+  transition:
+    opacity 0.6s ease,
+    visibility 0.6s;
+}
+.site-loader.is-leaving {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.site-loader-backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.site-loader-backdrop img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 54% center;
+  opacity: 0.32;
+  filter: blur(6px) saturate(0.8);
+  transform: scale(1.06);
+}
+.site-loader-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(320px, 78vw);
+  text-align: center;
+}
+.site-loader-logo {
+  width: 120px;
+  height: auto;
+  margin-bottom: 28px;
+}
+.site-loader-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #ffffffb3;
+}
+.site-loader-percent {
+  font: 400 clamp(64px, 14vw, 96px) / 1 var(--serif);
+  font-variant-numeric: tabular-nums;
+  margin: 14px 0 22px;
+}
+.site-loader-percent span {
+  font-size: 0.4em;
+  margin-left: 4px;
+  color: #ffffffa6;
+}
+.site-loader-bar {
+  width: 100%;
+  height: 2px;
+  background: #ffffff26;
+  overflow: hidden;
+}
+.site-loader-bar span {
+  display: block;
+  height: 100%;
+  background: var(--aqua);
+  transform-origin: left;
+  transition: transform 0.25s linear;
+}
+.site-loader-skip {
+  margin-top: 26px;
+  padding: 8px 4px;
+  border: 0;
+  background: none;
+  color: #ffffffcc;
+  font: 500 13px var(--sans);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease;
+}
+.site-loader-skip[data-visible="true"] {
+  opacity: 1;
+  visibility: visible;
+}

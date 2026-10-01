@@ -12,6 +12,7 @@ import Process from "./Process";
 import Stories from "./Stories";
 import Consultation from "./Consultation";
 import Footer from "./Footer";
+import SiteLoader from "./SiteLoader";
 import { createSmoothScroll } from "../lib/smooth-scroll";
 gsap.registerPlugin(ScrollTrigger);
 export default function Experience() {
@@ -106,6 +107,8 @@ export default function Experience() {
   }, []);
   return (
     <>
+      {/* First: its layout effect must queue downloads before the hero's. */}
+      <SiteLoader />
       <a href="#transformation" className="skip-link">
         Salta l’introduzione animata
       </a>

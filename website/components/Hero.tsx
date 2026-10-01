@@ -52,24 +52,20 @@ export default function Hero() {
           );
           gsap.set(caption, {
             autoAlpha: Math.min(fadeIn, fadeOut) * finalFade,
-            y: 12 * (1 - fadeIn),
+            y: reducedMotion ? 0 : 12 * (1 - fadeIn),
           });
         });
       };
       let scenes: ReturnType<typeof createScrollScenes> | undefined;
       let checkTelevision: (() => void) | undefined;
       let unregisterCheckpoint: (() => void) | undefined;
-      if (reducedMotion) {
-        gsap.set(layers, { opacity: 0 });
-        gsap.set(layers[SCENE_COUNT - 1], { opacity: 1 });
-        layers[SCENE_COUNT - 1].querySelector("video")!.poster =
-          "/media/posters/10-final.webp";
-        gsap.set(texts, { autoAlpha: 0 });
-        setTvActive(true);
-      } else {
+      // The film only advances with the visitor's own scroll, so it also runs
+      // with "reduce motion"; that preference only drops the focus-pull blur.
+      {
         scenes = createScrollScenes(
           layers,
           root.current!.querySelector<HTMLElement>(".hero-media")!,
+          { focusPull: !reducedMotion },
         );
         const playhead = { progress: 0 };
         let renderedProgress = -1;

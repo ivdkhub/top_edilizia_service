@@ -18,7 +18,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="it">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <noscript>
+          <style>{".site-loader{display:none}html,body{overflow:auto!important}"}</style>
+        </noscript>
+        {children}
+      </body>
     </html>
   );
 }

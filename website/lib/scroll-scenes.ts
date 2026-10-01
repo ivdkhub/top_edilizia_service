@@ -1,4 +1,5 @@
 import gsap from "gsap";
+import { mediaUrl, whenMediaReady } from "./media-preload";
 
 const FPS = 24;
 const FRAME = 1 / FPS;
@@ -29,6 +30,7 @@ export function pickVariant(): Variant {
 export function createScrollScenes(
   layers: HTMLElement[],
   surface: HTMLElement,
+  { focusPull = true } = {},
 ) {
   let position = 0;
   let dirty = true;
@@ -45,6 +47,7 @@ export function createScrollScenes(
     lastSeek: -Infinity,
     lastUsed: lastInput,
     waitingSince: 0,
+    pending: "",
     opacity: index === 0 ? "1" : "0",
   }));
   const schedule = () => {
@@ -73,13 +76,26 @@ export function createScrollScenes(
     const clip = clips[index];
     if (!clip) return;
     clip.lastUsed = now;
-    if (!clip.video.getAttribute("src")) {
-      clip.frameTime = -1;
-      watchFrame(index);
-      clip.video.poster = `/media/posters/${variant === "portrait" ? "portrait" : "hd"}/${index + 1}.webp`;
-      clip.video.src = `/media/scroll/${variant}/${index + 1}.mp4`;
+    if (clip.video.getAttribute("src") || clip.pending) return;
+    clip.frameTime = -1;
+    watchFrame(index);
+    clip.video.poster = `/media/posters/${variant === "portrait" ? "portrait" : "hd"}/${index + 1}.webp`;
+    const url = `/media/scroll/${variant}/${index + 1}.mp4`;
+    const download = whenMediaReady(url);
+    const attach = (src: string) => {
+      clip.video.src = src;
       clip.video.load();
-    }
+      schedule();
+    };
+    // Still being preloaded: wait for the blob instead of fetching it twice.
+    if (download && mediaUrl(url) === url) {
+      clip.pending = url;
+      void download.then((src) => {
+        if (disposed || clip.pending !== url) return;
+        clip.pending = "";
+        attach(src);
+      });
+    } else attach(mediaUrl(url));
   };
   const targetTime = (index: number) => {
     const duration = clips[index].video.duration;
@@ -112,6 +128,7 @@ export function createScrollScenes(
     clip.video.load();
     clip.frameTime = -1;
     clip.waitingSince = 0;
+    clip.pending = "";
   };
   // Rotating a phone switches between the portrait crop and full frames.
   const resize = () => {
@@ -119,7 +136,7 @@ export function createScrollScenes(
     if (next === variant) return;
     variant = next;
     clips.forEach((clip, index) => {
-      if (clip.video.getAttribute("src")) release(index);
+      if (clip.video.getAttribute("src") || clip.pending) release(index);
     });
     schedule();
   };
@@ -204,7 +221,7 @@ export function createScrollScenes(
     const idle = now - lastInput;
     const idleFade = 1 - clamp((idle - 150) / 220);
     const mixStrength = Math.min(1, 2 * (1 - Math.max(...weights)));
-    const blur = (mixStrength * idleFade * 1.6).toFixed(2);
+    const blur = focusPull ? (mixStrength * idleFade * 1.6).toFixed(2) : "0.00";
     if (blur !== lastBlur) {
       surface.style.filter = Number(blur) > 0.02 ? `blur(${blur}px)` : "none";
       lastBlur = blur;
