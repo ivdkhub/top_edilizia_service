@@ -2,26 +2,33 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import manifest from "../content/scroll-media-manifest.json";
-import { preloadMedia, type PreloadItem } from "../lib/media-preload";
+import {
+  preloadMedia,
+  streamPendingMedia,
+  type PreloadItem,
+} from "../lib/media-preload";
 import { pickVariant } from "../lib/scroll-scenes";
 
 // Offered when a slow connection keeps the visitor waiting this long.
 const SKIP_AFTER_MS = 7000;
 
+// The loader waits for the first scene only; the rest of the film keeps
+// downloading behind the page, in the order the visitor reaches it.
 function introAssets(): PreloadItem[] {
   const variant = pickVariant();
   return [
-    { url: "/media/telecomando-top.webp", bytes: 28_874 },
-    ...manifest.map((scene) => ({
+    ...manifest.map((scene, index) => ({
       url: scene.variants[variant].webPath,
       bytes: scene.variants[variant].bytes,
+      essential: index === 0,
     })),
+    { url: "/media/telecomando-top.webp", bytes: 28_874 },
     { url: "/media/11.mp4", bytes: 404_990 },
     { url: "/media/tv/11-reverse.mp4", bytes: 394_656 },
   ];
 }
 
-/** Holds the page until the opening film is downloaded, then fades away. */
+/** Holds the page until the opening scene is downloaded, then fades away. */
 export default function SiteLoader() {
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState<"loading" | "leaving" | "gone">(
@@ -53,7 +60,11 @@ export default function SiteLoader() {
   useEffect(() => {
     if (phase !== "leaving") return;
     document.body.removeAttribute("data-scroll-locked");
-    ScrollTrigger.refresh();
+    // Measure the pin only after the smooth scroll's mutation observer has
+    // restored the scrollbar (it runs first, being queued by the attribute
+    // change), or the hero keeps the wider scrollbar-less width. A microtask
+    // also runs in a background tab, where animation frames are paused.
+    void Promise.resolve().then(() => ScrollTrigger.refresh());
     const timer = setTimeout(() => setPhase("gone"), 700);
     return () => clearTimeout(timer);
   }, [phase]);
@@ -95,7 +106,11 @@ export default function SiteLoader() {
           className="site-loader-skip"
           data-visible={canSkip && phase === "loading"}
           tabIndex={canSkip ? 0 : -1}
-          onClick={() => finish.current()}
+          onClick={() => {
+            // Play what is still downloading straight from the network.
+            streamPendingMedia();
+            finish.current();
+          }}
         >
           Connessione lenta? Entra subito
         </button>

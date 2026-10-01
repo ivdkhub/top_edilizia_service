@@ -1,5 +1,5 @@
 import gsap from "gsap";
-import { mediaUrl, whenMediaReady } from "./media-preload";
+import { claimMedia } from "./media-preload";
 
 const FPS = 24;
 const FRAME = 1 / FPS;
@@ -81,21 +81,22 @@ export function createScrollScenes(
     watchFrame(index);
     clip.video.poster = `/media/posters/${variant === "portrait" ? "portrait" : "hd"}/${index + 1}.webp`;
     const url = `/media/scroll/${variant}/${index + 1}.mp4`;
-    const download = whenMediaReady(url);
+    const source = claimMedia(url);
     const attach = (src: string) => {
       clip.video.src = src;
       clip.video.load();
       schedule();
     };
-    // Still being preloaded: wait for the blob instead of fetching it twice.
-    if (download && mediaUrl(url) === url) {
+    // Already downloading: wait for the blob instead of fetching it twice.
+    if (typeof source === "string") attach(source);
+    else {
       clip.pending = url;
-      void download.then((src) => {
+      void source.then((src) => {
         if (disposed || clip.pending !== url) return;
         clip.pending = "";
         attach(src);
       });
-    } else attach(mediaUrl(url));
+    }
   };
   const targetTime = (index: number) => {
     const duration = clips[index].video.duration;

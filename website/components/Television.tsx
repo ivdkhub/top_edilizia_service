@@ -1,7 +1,13 @@
 "use client";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import RemoteControl from "./RemoteControl";
-import { mediaUrl } from "../lib/media-preload";
+import { claimMedia } from "../lib/media-preload";
+
+// The preloaded copy when ready; otherwise stream it rather than wait.
+const tvSource = (url: string) => {
+  const source = claimMedia(url);
+  return typeof source === "string" ? source : url;
+};
 
 type Phase = "off" | "starting" | "on" | "stopping";
 type Direction = "forward" | "reverse";
@@ -184,7 +190,7 @@ export default function Television({ active }: { active: boolean }) {
       >
         <video
           ref={forward}
-          src={active ? mediaUrl("/media/11.mp4") : undefined}
+          src={active ? tvSource("/media/11.mp4") : undefined}
           muted
           playsInline
           preload={active ? "auto" : "none"}
@@ -193,7 +199,7 @@ export default function Television({ active }: { active: boolean }) {
         />
         <video
           ref={reverse}
-          src={active ? mediaUrl("/media/tv/11-reverse.mp4") : undefined}
+          src={active ? tvSource("/media/tv/11-reverse.mp4") : undefined}
           muted
           playsInline
           preload={active ? "auto" : "none"}
